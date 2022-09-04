@@ -1,0 +1,11 @@
+.venv
+.vscode
+__pycache__
+.env
+dump.rdb
+application/__pycache__
+application/util/__pycache__
+application/api/__pycache__
+application/api/user/__pycache__
+application/api/main/__pycache__
+application/api/seller/__pycache__
