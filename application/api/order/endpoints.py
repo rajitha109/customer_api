@@ -1,10 +1,9 @@
-from turtle import end_poly
 from flask_restx import Namespace, Resource
 from http import HTTPStatus
 
 
 from .dto import (
-    gcart_parser,
+    # gcart_parser,
     order_parser,
     pay_parser,
     food_order_parser,
@@ -13,31 +12,37 @@ from .dto import (
     order_cancel_parser,
     rev_parser,
     ticket_parser,
-    payment_parser
-   
+    #payment_parser,
 )
 from .functions import (
-    add_cart,
+    # add_cart,
     customer_ticket,
-    place_order,
-    pay_order,
-    place_food_order,
+    order_grocery_create,
+    pay_grocery_order,
+    order_food_create,
     pay_food_order,
     return_order,
     cancel_order,
-    all_orders,
-    grocery_order_status,
+    grocery_orders,
+    grocery_order_details,
     review_create,
     customer_ticket,
     save_card,
-    completed_orders,
-    ongoing_orders,
+    return_list,
+    return_details,
+    food_orders,
+    food_order_details,
+    #get_available_coupons,
+    get_ticket_categories,
+    get_coupon_details,
+    changestate
 )
 
 order_ns = Namespace(name="order", validate=True)
 
 ##### Grocery  Qty ########
 # check QTY
+'''
 @order_ns.route("/grocery/cart/<int:seller_id>", endpoint="add_cart")
 class GCart(Resource):
     @order_ns.doc(security="Bearer")
@@ -62,30 +67,31 @@ class GCart(Resource):
         data = gcart_parser.parse_args()
         return add_cart(seller_id, data)
 
+'''
 
 # Place Order
-@order_ns.route("/grocery/order/<int:seller_id>", endpoint="add_order")
+@order_ns.route("/grocery/create", endpoint="add_order")
 class Order(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.expect(order_parser)
-    # @order_ns.expect(x)
     @order_ns.response(int(HTTPStatus.OK), "Added to order.")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def post(self, seller_id):
+    def post(self):
 
-        """Post param to Add Grocery order
+        """Add Grocery order
         Demo pass values
-        { Seller_id:1,
-        stringDic: "{'product_id':{'sold_price':'qty'},'product_id':{'sold_price':'qty'}}" ,
+        {
+        stringDic: "{'product_id':{'product_total_price':'qty'},'product_id':{'product_total_price':'qty'}}" ,
         "gross": 200,
         "delivery_fee": 75,
         "net": 275,
         "coupon_id": 1
         "is_mobile":True of False,
-        "customer_id":6,
+        "seller_id":1,
         "longitude":80,
         "latitude":7,
-        "Payment process Price plan":1,
+        "pay_method":"p",p=payhere
+
 
         }
 
@@ -98,26 +104,26 @@ class Order(Resource):
         }
         """
         data = order_parser.parse_args()
-        return place_order(seller_id, data)
+        return order_grocery_create(data)
 
 
 # Payment Grocery
-@order_ns.route("/grocery/payment/<int:seller_id>", endpoint="pay_confirm")
+@order_ns.route("/grocery/payment", endpoint="pay_confirm")
 class Pay(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.expect(pay_parser)
     @order_ns.response(int(HTTPStatus.OK), "paid")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def post(self, seller_id):
+    def post(self):
 
-        """Post param to Grocery pay
+        """Order Grocery payment
         Demo pass values
-        { Seller_id:1,
+        {
+        Seller_id:1,
         order_id:1,
-        pay_method:c/o c=cash or o=card,
+        pay_method:"s": "Cash", "c": "Card", "o": "COD","r":"credit",
         payment_confirm:True/False,
-        content:{"receipt_no": "990761", "type": "visa", "holder_name":"",card_no:"4444","expire","11/24","cvv":"600"}
-        }
+        content:"{'receipt_no': '990761', 'type': 'visa', 'holder_name':'',card_no:'4444','expire','11/24','cvv':'600'}"
 
         }
 
@@ -129,34 +135,33 @@ class Pay(Resource):
         }
         """
         data = pay_parser.parse_args()
-        return pay_order(seller_id, data)
+        return pay_grocery_order(data)
 
 
 ##### Food   ########
 # Place Food Order
-@order_ns.route("/food/order/<int:seller_id>", endpoint="food_order")
+@order_ns.route("/food/create", endpoint="food_order")
 class FoodOrder(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.expect(food_order_parser)
     @order_ns.response(int(HTTPStatus.OK), "Added to food order.")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def post(self, seller_id):
+    def post(self):
 
-        """Post param to Add Food order
+        """Add Food order
         Demo pass values
-        { Seller_id:1,
-        "food": " {'food_id':{'sold_price':'qty'},'food_id':{'sold_price':'qty'}}" ,
-        "size": "{'size_term_id':{'food_id':'sold_price'},'size_term_id':{'food_id':'sold_price'}}", or ""
+        {
+        "Seller_id":1,
+        "food": " {'food_id':{'food_total_price':'qty'},'food_id':{'food_total_price':'qty'}}" ,
+        "size": "{'size_term_id':{'food_id':'food_size_total_price'},'size_term_id':{'food_id':'food_size_total_price'}}", or ""
         "addon": "{'addon_term_id':{'food_id':'qty'},'addon_term_id':{'food_id':'qty'}}", or ""
         "gross": 200,
         "delivery_fee": 75,
         "net": 275,
         "coupon_id": 1,
-        "is_mobile":True of False,
-        "customer_id":6,
         "longitude":80,
         "latitude":7,
-        "payment_plan_id":1
+
 
         }
 
@@ -169,7 +174,7 @@ class FoodOrder(Resource):
         }
         """
         data = food_order_parser.parse_args()
-        return place_food_order(seller_id, data)
+        return order_food_create(data)
 
 
 # Payment Food
@@ -181,15 +186,13 @@ class FoodPay(Resource):
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
     def post(self):
 
-        """Post param to Food pay
+        """Food payment
         Demo pass values
         {
         order_id:1,
-        pay_method:c/o c=cash or o=card,
+        pay_method:"s": "Cash", "c": "Card", "o": "COD","r":"credit",
         payment_confirm:True/False,
         content:{"receipt_no": "990761", "type": "visa", "holder_name":"",card_no:"4444","expire","11/24","cvv":"600"}
-        }
-
         }
 
         Intended Result
@@ -204,22 +207,20 @@ class FoodPay(Resource):
 
 
 # Order Return
-@order_ns.route("/grocery/order/return/<int:order_id>", endpoint="order_return")
+@order_ns.route("/grocery/return/create", endpoint="order_return")
 class OrderReturn(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.expect(return_parser)
     @order_ns.response(int(HTTPStatus.OK), "Order return")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def post(self, order_id):
+    def post(self):
 
         """Post param to return Order
         Demo pass values
         {
         order_id:1,
-        product_data: "{'1':{'product_id':'qty'},'2':{'product_id':'qty'}}" ,
+        product_data: "{'1':{'product_id':'qty'},'2':{'product_id':'qty'},'3':{'product_id':'qty'}}" ,
         return_note:adasdsad
-
-        }
 
         }
 
@@ -231,25 +232,23 @@ class OrderReturn(Resource):
         }
         """
         data = return_parser.parse_args()
-        return return_order(order_id, data)
+        return return_order(data)
 
 
 # Order cancel
-@order_ns.route("/cancel/<int:order_id>", endpoint="order_cancel")
+@order_ns.route("/cancel", endpoint="order_cancel")
 class OrderCancel(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.expect(order_cancel_parser)
     @order_ns.response(int(HTTPStatus.OK), "Order Cancel")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def post(self, order_id):
+    def post(self):
 
-        """Post param to Cancel Order
+        """Cancel Order
         Demo pass values
         {
         order_id:1,
         type:f or g
-        }
-
         }
 
         Intended Result
@@ -260,54 +259,79 @@ class OrderCancel(Resource):
         }
         """
         data = order_cancel_parser.parse_args()
-        return cancel_order(order_id, data)
+        return cancel_order(data)
 
-#See all orders
-@order_ns.route("/all/<int:customer_id>", endpoint="all_orders")
-class SeeOrders(Resource):
+
+# all return orders
+@order_ns.route("/grocery/return/all", endpoint="return_list")
+class ReturnOrders(Resource):
+    @order_ns.doc(security="Bearer")
+    @order_ns.response(int(HTTPStatus.OK), "All return Orders")
+    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+    def get(self):
+        """Customer All Return Orders"""
+
+        return return_list()
+
+
+# return product details
+@order_ns.route("/grocery/return/<int:return_id>", endpoint="return_product")
+class ReturnDetails(Resource):
+    @order_ns.doc(security="Bearer")
+    @order_ns.response(int(HTTPStatus.OK), "All return Orders")
+    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+    def get(self, return_id):
+        """Return Per Product details"""
+
+        return return_details(return_id)
+
+
+# See all orders
+@order_ns.route("/grocery/all", endpoint="grocery_orders")
+class SeeGrocery(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.response(int(HTTPStatus.OK), "All Orders")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def get(self, customer_id):
-        
-        return all_orders(customer_id)
+    def get(self):
+        """All Grocery Order Details"""
+
+        return grocery_orders()
 
 
-#See Completed orders
-@order_ns.route("/completed/<int:customer_id>", endpoint="completed_orders")
-class CompletedOrders(Resource):
+# See all orders
+@order_ns.route("/food/all", endpoint="food_orders")
+class SeeFood(Resource):
     @order_ns.doc(security="Bearer")
-    @order_ns.response(int(HTTPStatus.OK), "Completed Orders")
+    @order_ns.response(int(HTTPStatus.OK), "All Orders")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def get(self, customer_id):
-        
-        return completed_orders(customer_id)
+    def get(self):
+        """All Food Order Details"""
 
-#See ongoing orders
-@order_ns.route("/ongoing/<int:customer_id>", endpoint="ongoing_orders")
-class OngoingOrders(Resource):
-    @order_ns.doc(security="Bearer")
-    @order_ns.response(int(HTTPStatus.OK), "ongoing Orders")
-    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def get(self, customer_id):
-        
-        return ongoing_orders(customer_id)
+        return food_orders()
 
 
-
-
-#See order status
-@order_ns.route("/grocery/status/<int:order_id>", endpoint="order_status")
-class OrderStatus(Resource):
+# See one order details
+@order_ns.route("/grocery/<int:order_id>", endpoint="order_details")
+class GroceryOrderDetails(Resource):
     @order_ns.doc(security="Bearer")
     @order_ns.response(int(HTTPStatus.OK), "Order Status")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
     def get(self, order_id):
+        """One Groery Order Data"""
 
-       
-        
-        return grocery_order_status(order_id)
+        return grocery_order_details(order_id)
 
+
+# See one order details
+@order_ns.route("/food/<int:order_id>", endpoint="food_order_details")
+class FoodOrderDetails(Resource):
+    @order_ns.doc(security="Bearer")
+    @order_ns.response(int(HTTPStatus.OK), "Order Status")
+    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+    def get(self, order_id):
+        """One Food Order Data"""
+
+        return food_order_details(order_id)
 
 
 @order_ns.route("/review/<int:deliver_id>", endpoint="deliverer_review")
@@ -316,31 +340,28 @@ class Review(Resource):
 
     @order_ns.doc(security="Bearer")
     @order_ns.expect(rev_parser)
-
     @order_ns.response(int(HTTPStatus.OK), "rate saved.")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
     @order_ns.response(int(HTTPStatus.INTERNAL_SERVER_ERROR), "Internal server error.")
-    
-
-    def post(self,deliver_id):
-        ''' Post customer-deliverer review 
+    def post(self, deliver_id):
+        """Post customer-deliverer review
         Demo pass values
         { deliverer_id:'1', rate:Integer ,review:String,order_id:Integer,customer_id:Integer  }
 
         Intended Result
-        { 
+        {
             status:success/fail,
             message:review_created or error
 
-        }        
-        '''
-        data=rev_parser.parse_args()
-        res=review_create(deliver_id,data)
-        
+        }
+        """
+        data = rev_parser.parse_args()
+        res = review_create(deliver_id, data)
+
         return res
 
 
-#Customer Ticket
+# Customer Ticket
 @order_ns.route("/ticket", endpoint="customer_ticket")
 class CustomerTicket(Resource):
     @order_ns.doc(security="Bearer")
@@ -348,53 +369,96 @@ class CustomerTicket(Resource):
     @order_ns.response(int(HTTPStatus.OK), "Customer Ticket")
     @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
     def post(self):
-        ''' Post customer Ticket 
+        """Post customer Ticket
         Demo pass values
-        { ticket_category_id:1, 
+        { ticket_category_id:1,
         customer_text:str ,
-        customer_id:int,
+
           }
 
         Intended Result
-        { 
+        {
             status:success/fail,
             message:
 
-        }        
-        '''
-        data=ticket_parser.parse_args()
-        res=customer_ticket(data)        
+        }
+        """
+        data = ticket_parser.parse_args()
+        res = customer_ticket(data)
         return res
 
 
-#Payment Save
-@order_ns.route("/savecard", endpoint="save_card")
-class SaveCard(Resource):
-    @order_ns.doc(security="Bearer")
-    @order_ns.expect(payment_parser)
-    @order_ns.response(int(HTTPStatus.OK), "Save Payment")
-    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
-    def post(self):
-        '''
+# Payment Save
+#@order_ns.route("/save_card", endpoint="save_card")
+#class SaveCard(Resource):
+#    @order_ns.doc(security="Bearer")
+#    @order_ns.expect(payment_parser)
+#    @order_ns.response(int(HTTPStatus.OK), "Save Payment")
+#    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+#    def post(self):
+        """
         Post param to save payment details
          Demo pass values
-        { bank_number:1, 
+        { bank_number:1,
         type:str ,
         card_number:int,
         expire:"11/25",
         cvv:123,
         holder:"",
-        customer_id:,
           }
 
         Intended Result
-        { 
+        {
             status:success/fail,
             message:save card
 
-        }        
-                
-        
-        '''
-        data=payment_parser.parse_args()        
-        return save_card(data)
+        }
+        """
+#        data = payment_parser.parse_args()
+ #       return save_card(data)
+
+
+# See one order details
+#@order_ns.route("/coupons", endpoint="available_coupons")
+#class AvailableCoupons(Resource):
+#    @order_ns.doc(security="Bearer")
+#    @order_ns.response(int(HTTPStatus.OK), "Order Status")
+#    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+#    def get(self):
+#        """All available Coupons"""
+
+#        return get_available_coupons()
+
+
+# See one order details
+@order_ns.route("/coupons/<int:coupon_ref_no>", endpoint="coupon_details")
+class CouponDetails(Resource):
+    @order_ns.doc(security="Bearer")
+    @order_ns.response(int(HTTPStatus.OK), "Order Status")
+    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+    def get(self, coupon_ref_no):
+        """Coupon Details"""
+
+        return get_coupon_details(coupon_ref_no)
+
+
+# See one order details
+@order_ns.route("/ticket_categories", endpoint="ticket_categories")
+class TicketCategories(Resource):
+    @order_ns.doc(security="Bearer")
+    @order_ns.response(int(HTTPStatus.OK), "Order Status")
+    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+    def get(self):
+        """All ticket categories"""
+
+        return get_ticket_categories()
+
+#change state of order
+@order_ns.route("/received/<int:order_id>", endpoint="received_state")
+class ChangeState(Resource):
+    @order_ns.doc(security="Bearer")
+    @order_ns.response(int(HTTPStatus.OK), "Order Status")
+    @order_ns.response(int(HTTPStatus.BAD_REQUEST), "Validation error.")
+
+    def put(self,order_id):
+        return changestate(order_id)

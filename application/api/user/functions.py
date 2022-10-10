@@ -5,7 +5,7 @@ from http import HTTPStatus
 from flask import current_app, jsonify
 
 from application import db
-from application.models import CustomerUser, CustomerBlacklistToken, CustomerLocation, CustomerProfile
+from application.models import CustomerUser, CustomerBlacklistToken, CustomerLocation, CustomerProfile, CustomerWallet
 from application.helpers import token_required
 from application.util.datetime_util import remaining_fromtimestamp, format_timespan_digits
 from application.util.otp import Hotp
@@ -52,6 +52,7 @@ def register(data):
         # Send push notification
         payload = {
             "app_id":current_app.config.get('ONESIGNAL_APP_ID'),
+            "contact_no":contact_no,
             "include_player_ids": player_id,
             "contents": {
                 "en": conf_code+" is your gogett verification code",
@@ -217,44 +218,93 @@ def get_location():
 
 
 # Create or update profile
+#@token_required
+#def profile_save(data):
+#    user_id = profile_save.user_id
+#    f_name = data.get('first_name')
+#    l_name = data.get('last_name')
+#    email = data.get('email')
+#    image = data.get('image')
+
+#    prof = CustomerProfile.query.filter_by(cus_id = user_id).first()
+#    new_email = True
+#    res = {}
+
+#    try:
+#        prof_image = None
+#        if prof:
+#            if prof.email == email:
+#                new_email = False
+#            if image:
+#                # Delete existion image from file if image is not default avatar
+#                if prof.image != "default_avatar.png":
+#                    delete_image(prof.image)
+#                # Save image
+#                prof_image = save_image(image)
+#                prof.image = prof_image
+#            prof.email = email
+#           prof.first_name = f_name
+#            prof.last_name = l_name
+#            db.session.commit()
+#        else:
+#            ref_no = gen_ref_key(CustomerProfile, 'C')
+#            if image:
+#                prof_image = save_image(image)
+#            new_profile = CustomerProfile(
+#                ref_no = ref_no,
+#               email = email,
+#                first_name = f_name,
+#                last_name = l_name,
+#                image = prof_image,
+#                cus_id = user_id
+#            )
+#            db.session.add(new_profile)
+#            db.session.commit()
+#        res = jsonify(
+#            status_code = HTTPStatus.OK,
+#            status = "success",
+#            message = 'Profile_save',
+#            new_email = new_email
+#        )
+#    except Exception as e: 
+#        res = jsonify(
+#            status="fail",
+#            message=str(e)
+#        )
+#        res.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+#    return res
+
+# Create or update profile
 @token_required
 def profile_save(data):
     user_id = profile_save.user_id
     f_name = data.get('first_name')
     l_name = data.get('last_name')
     email = data.get('email')
-    image = data.get('image')
+    #image = data.get('image')
 
     prof = CustomerProfile.query.filter_by(cus_id = user_id).first()
     new_email = True
     res = {}
 
     try:
-        prof_image = None
+        #prof_image = None
         if prof:
             if prof.email == email:
                 new_email = False
-            if image:
-                # Delete existion image from file if image is not default avatar
-                if prof.image != "default_avatar.png":
-                    delete_image(prof.image)
-                # Save image
-                prof_image = save_image(image)
-                prof.image = prof_image
+            
             prof.email = email
             prof.first_name = f_name
             prof.last_name = l_name
             db.session.commit()
         else:
             ref_no = gen_ref_key(CustomerProfile, 'C')
-            if image:
-                prof_image = save_image(image)
+            
             new_profile = CustomerProfile(
                 ref_no = ref_no,
                 email = email,
                 first_name = f_name,
-                last_name = l_name,
-                image = prof_image,
+                last_name = l_name,                
                 cus_id = user_id
             )
             db.session.add(new_profile)
@@ -274,9 +324,36 @@ def profile_save(data):
     return res
 
 
+
+
 # Get profile of customer
 @token_required
 def get_profile():
     user_id = get_profile.user_id
     prof = CustomerProfile.query.filter_by(cus_id=user_id).first()
     return prof
+
+
+# Get wallet
+@token_required
+def get_wallet():    
+    try:
+        user_id=get_wallet.user_id   
+        wallet=db.session.query(CustomerWallet.id,CustomerWallet.amount,CustomerWallet.spent).filter_by(cus_id=user_id).first()
+        print(user_id)
+
+        res = jsonify(
+            
+            amount = wallet.amount,
+            spent  = wallet.spent,
+            wallet_id=wallet.id            
+            
+        )
+
+    except Exception as e: 
+        res = jsonify(
+            status="fail",
+            message=str(e)
+        )
+        res.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+    return res

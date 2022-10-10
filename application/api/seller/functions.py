@@ -67,12 +67,9 @@ def get_seller(seller_id):
         "latitude": seller.SellerProfile.longitude,
         "state": state,
         "rateing": seller.rateing,
-        "img": os.path.join(
-            current_app.root_path,
-            current_app.config.get("UPLOAD_PATH")
-            + "/img/seller_usr"
-            + seller.SellerProfile.image,
-        ),
+        "img": current_app.config.get("DOWNLOAD_PATH")
+        + "/img/seller_usr/"
+        + seller.SellerProfile.image,
     }
 
     return jsonify(res)
@@ -88,9 +85,7 @@ def get_grocery_category(seller_id, counter):
             GroceryProductStock.seller_prof,
             GroceryProductTermMap.term_id,
         )
-        .join(
-            GroceryProductStock, GroceryProductStock.product_id == GroceryProduct.id
-        )
+        .join(GroceryProductStock, GroceryProductStock.product_id == GroceryProduct.id)
         .join(
             GroceryProductTermMap,
             GroceryProductTermMap.product_id == GroceryProduct.id,
@@ -118,9 +113,7 @@ def get_grocery_category(seller_id, counter):
         )
         .join(stock_q, stock_q.c.term_id == GroceryProductTerm.id)
         .filter(GroceryProductTaxonomy.taxonomy == "category")
-        .paginate(
-            page=counter, per_page=current_app.config.get("DISPLAY_LIST_LENGTH")
-        )
+        .paginate(page=counter, per_page=current_app.config.get("DISPLAY_LIST_LENGTH"))
     )
 
     res = []
@@ -128,10 +121,7 @@ def get_grocery_category(seller_id, counter):
         info = {
             "category_id": i.id,
             "name": i.term,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/inv" + i.image,
-            ),
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res.append(info)
 
@@ -161,21 +151,15 @@ def get_food_category(seller_id, counter):
         .join(FoodTaxonomy, FoodTaxonomy.term_id == FoodTerm.id)
         .join(food_q, food_q.c.term_id == FoodTerm.id)
         .filter(FoodTaxonomy.taxonomy == "category")
-        .paginate(
-            page=counter, per_page=current_app.config.get("DISPLAY_LIST_LENGTH")
-        )
+        .paginate(page=counter, per_page=current_app.config.get("DISPLAY_LIST_LENGTH"))
     )
-        
 
     res = []
     for i in cat.items:
         info = {
             "category_id": i.id,
             "name": i.term,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/inv" + i.image,
-            ),
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res.append(info)
 
@@ -196,12 +180,10 @@ def get_grocery_products(seller_id, cat_id, counter):
             GroceryProduct.image,
             GroceryProductStock.qty,
             GroceryProductStock.regular_price.label("reg_price"),
-            GroceryProductStock.sale_price,
+            GroceryProductStock.app_price,
             GroceryProductTermMap.term_id,
         )
-        .join(
-            GroceryProductStock, GroceryProductStock.product_id == GroceryProduct.id
-        )
+        .join(GroceryProductStock, GroceryProductStock.product_id == GroceryProduct.id)
         .join(
             GroceryProductTermMap,
             GroceryProductTermMap.product_id == GroceryProduct.id,
@@ -251,26 +233,21 @@ def get_grocery_products(seller_id, cat_id, counter):
                 unit = j.term
 
         info = {
-            'product_id':i.prd_id,
-            'ref_no':i.ref_no,
-            'name':i.name,
-            'desc':i.desc,
-            'qry': i.qty,
-            'feature':i.is_feature,
-            'regular_price':i.reg_price,
-            'sale_price': i.sale_price,
-            "brand":brand,
-            "size":size,
-            "unit":unit,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH")
-                + "/img/inv"
-                + i.image,
-            ),
+            "product_id": i.prd_id,
+            "ref_no": i.ref_no,
+            "name": i.name,
+            "desc": i.desc,
+            "qry": i.qty,
+            "feature": i.is_feature,
+            "regular_price": i.reg_price,
+            "sale_price": i.app_price,
+            "brand": brand,
+            "size": size,
+            "unit": unit,
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res.append(info)
-    
+
     return jsonify(res)
 
 
@@ -287,7 +264,7 @@ def get_food_products(seller_id, cat_id, counter):
             Food.is_feature,
             Food.image,
             Food.regular_price.label("reg_price"),
-            Food.sale_price,
+            Food.app_price,
             FoodTermMap.term_id,
         )
         .join(FoodTermMap, FoodTermMap.food_id == Food.id)
@@ -296,7 +273,7 @@ def get_food_products(seller_id, cat_id, counter):
 
     if cat_id != None:
         prd = prd.filter(FoodTermMap.term_id == cat_id)
-        
+
     prd = prd.group_by("prd_id").paginate(
         page=counter, per_page=current_app.config.get("DISPLAY_LIST_LENGTH")
     )
@@ -338,7 +315,8 @@ def get_food_products(seller_id, cat_id, counter):
                 info = {
                     "id": j.id,
                     "term": j.term.capitalize(),
-                    "price": size_price.description["regular_price"],
+                    "regular_price": size_price.description["regular_price"],
+                    "sale_price": size_price.description["app_price"],
                 }
                 size.append(info)
             elif j.taxonomy == "addon":
@@ -364,25 +342,21 @@ def get_food_products(seller_id, cat_id, counter):
                 addon.append(info)
 
         info = {
-            'product_id':i.prd_id,
-            'ref_no':i.ref_no,
-            'name':i.name,
-            'desc':i.desc,
-            'feature':i.is_feature,
-            'regular_price':i.reg_price,
-            'sale_price': i.sale_price,
-            "size":size,
-            "addon":addon,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH")
-                + "/img/inv"
-                + i.image,
-            ),
+            "product_id": i.prd_id,
+            "ref_no": i.ref_no,
+            "name": i.name,
+            "desc": i.desc,
+            "feature": i.is_feature,
+            "regular_price": i.reg_price,
+            "sale_price": i.app_price,
+            "size": size,
+            "addon": addon,
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res.append(info)
-    
+
     return jsonify(res)
+
 
 # Review Create customer_seller
 # Create from mandatory = rate

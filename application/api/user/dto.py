@@ -1,6 +1,7 @@
+from flask import current_app
 from flask_restx import Model
 from flask_restx.inputs import email
-from flask_restx.fields import String, Boolean, Integer, Float
+from flask_restx.fields import String, Boolean, Integer, Float, Raw
 from flask_restx.reqparse import RequestParser
 from werkzeug.datastructures import FileStorage
 
@@ -33,13 +34,20 @@ location_model = Model(
     }
 )
 
+# Get image item from profile
+class IamgeItem(Raw):
+    def format(self, value):
+        return current_app.config.get("DOWNLOAD_PATH") + "/img/cus_usr/" + value
+
+
 prof_model = Model(
     'CustomerProfile',
     {
         'id':Integer,
         'first_name':String,
         'last_name':String,
-        'email': String
+        'email': String,
+        'image':IamgeItem
     }
 )
 
@@ -69,8 +77,14 @@ location_parser.add_argument('longitude', type=str, location="json", required=Tr
 location_parser.add_argument('latitude', type=str, location="json", required=True, nullable=False, help="Location latitude in float")
 
 # User on profile
+#prof_parser = RequestParser(bundle_errors=True)
+#prof_parser.add_argument('first_name', type=str, location="form", required=True, nullable=False, help="First name, min=3, max=50")
+#prof_parser.add_argument('last_name', type=str, location="form", required=True, nullable=False, help="Last name, min=3, max=50")
+#prof_parser.add_argument('email', type=email(), location="form", required=True, nullable=False, help="max=120")
+#prof_parser.add_argument('image', type=FileStorage, location='files', help="File allowed PNG, JPG, JPEG")
+
+# User on profile
 prof_parser = RequestParser(bundle_errors=True)
-prof_parser.add_argument('first_name', type=str, location="form", required=True, nullable=False, help="First name, min=3, max=50")
-prof_parser.add_argument('last_name', type=str, location="form", required=True, nullable=False, help="Last name, min=3, max=50")
-prof_parser.add_argument('email', type=email(), location="form", required=True, nullable=False, help="max=120")
-prof_parser.add_argument('image', type=FileStorage, location='files', help="File allowed PNG, JPG, JPEG")
+prof_parser.add_argument('first_name', type=str, location="json", required=True, nullable=False, help="First name, min=3, max=50")
+prof_parser.add_argument('last_name', type=str, location="json", required=True, nullable=False, help="Last name, min=3, max=50")
+prof_parser.add_argument('email', type=email(), location="json", required=True, nullable=False, help="max=120")

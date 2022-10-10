@@ -1,14 +1,12 @@
 import os
 from datetime import datetime
 from flask import current_app, jsonify
-from sqlalchemy import column, func, and_, or_
+from sqlalchemy import column, and_, or_
 
 from application import db
 from application.models import (
     GroceryProduct,
     SellerProfile,
-    Feedback,
-    CustomerSellerFeedback,
     Ad,
     AdGrocery,
     AdFood,
@@ -44,10 +42,7 @@ def home():
     for i in ad:
         info = {
             "id": i.id,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/ad" + i.image,
-            ),
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/ad/" + i.image,
         }
         res_ad.append(info)
 
@@ -86,12 +81,7 @@ def home():
     #         "id": i.SellerProfile.id,
     #         "org": i.SellerProfile.organization,
     #         "type": i.SellerProfile.type,
-    #         "img": os.path.join(
-    #             current_app.root_path,
-    #             current_app.config.get("UPLOAD_PATH")
-    #             + "/img/seller_usr"
-    #             + i.SellerProfile.image,
-    #         ),
+    #         "img": current_app.config.get("DOWNLOAD_PATH") + "/img/seller_usr/"+ i.image,
     #     }
     #     res_seller.append(info)
 
@@ -132,10 +122,7 @@ def get_home(term_db, tax_db, ad_db):
         info = {
             "category_id": i.id,
             "name": i.term,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/inv" + i.image,
-            ),
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res_cat.append(info)
 
@@ -159,10 +146,7 @@ def get_home(term_db, tax_db, ad_db):
     for i in ad:
         info = {
             "ad_id": i.id,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/ad" + i.image,
-            ),
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/ad/" + i.image,
         }
         res_ad.append(info)
 
@@ -277,10 +261,8 @@ def seller_find(data, type):
         info = {
             "id": i.id,
             "org": i.org,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/seller_usr",
-            )
+            "img": current_app.config.get("DOWNLOAD_PATH")
+            + "/img/seller_usr/"
             + i.image,
         }
         res.append(info)
@@ -370,11 +352,7 @@ def grocery_product_find(data):
             "qty": str(i.qty),
             "reg_price": str(i.reg_price),
             "sale_price": str(i.sale_price),
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/seller_usr",
-            )
-            + i.image,
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res.append(info)
 
@@ -408,7 +386,7 @@ def food_product_find(data):
         db.session.query(FoodTerm.term, FoodTermMap.food_id, FoodTaxonomy.taxonomy)
         .join(FoodTaxonomy, FoodTaxonomy.term_id == FoodTerm.id)
         .join(FoodTermMap, FoodTermMap.term_id == FoodTerm.id)
-        .filter(FoodTaxonomy.taxonomy == 'category')
+        .filter(FoodTaxonomy.taxonomy == "category")
     )
     # Category avilable
     if cat != "":
@@ -450,7 +428,7 @@ def food_product_find(data):
             db.session.query(FoodTerm.term, FoodTermMap.food_id, FoodTaxonomy.taxonomy)
             .join(FoodTaxonomy, FoodTaxonomy.term_id == FoodTerm.id)
             .join(FoodTermMap, FoodTermMap.term_id == FoodTerm.id)
-            .filter(FoodTaxonomy.taxonomy == 'addon', FoodTermMap.food_id == i.id)
+            .filter(FoodTaxonomy.taxonomy == "addon", FoodTermMap.food_id == i.id)
             .first()
         ) is not None
 
@@ -462,12 +440,8 @@ def food_product_find(data):
             "desc": i.desc,
             "reg_price": str(i.reg_price),
             "sale_price": str(i.sale_price),
-            "addon":addon,
-            "img": os.path.join(
-                current_app.root_path,
-                current_app.config.get("UPLOAD_PATH") + "/img/seller_usr",
-            )
-            + i.image,
+            "addon": addon,
+            "img": current_app.config.get("DOWNLOAD_PATH") + "/img/inv/" + i.image,
         }
         res.append(info)
 

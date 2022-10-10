@@ -18,6 +18,7 @@ class Config():
 
     # Statci files
     UPLOAD_PATH = os.getenv('upload_path')
+    DOWNLOAD_PATH = os.getenv('download_path')
 
     # Celery
     CELERY_BROKER_URL = os.getenv('celery_broker')
@@ -30,3 +31,20 @@ class Config():
 
     # Marketing
     MAX_DISTANCE = 5
+    
+    # System values
+    GROCERY_TAXONOMY = {
+        "category": "category",
+        "brand": "brand",
+        "size": "size",
+        "unit": "unit",
+    }
+    FOOD_TAXONOMY = {
+        "category": "category",
+        "addon": "addon",
+        "size": "size",
+        "commission": "commission",
+        "size-price": "size-price",
+    }
+    
+    PAYMENT_METHODS = {"Cash":"s", "Card":"c", "COD":"o", "Credit":"r"}

@@ -27,5 +27,6 @@ def delete_image(form_image):
 # Asyn func
 @celery.task(name='user.send_push_notification')
 def parse_push_notification(payload):
+    print("Hello")
     send_push_notification(payload)
     

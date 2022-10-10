@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from flask_restx import Namespace, Resource
 
-from .functions import register, login, get_logged_in_user, logout, loation_save, get_location, profile_save, get_profile
+from .functions import get_wallet, register, login, get_logged_in_user, logout, loation_save, get_location, profile_save, get_profile
 from .dto import reg_parser, login_parser, user_model, location_parser, location_model, prof_parser, prof_model
 
 user_ns = Namespace(name="user", validate=True)
@@ -140,3 +140,20 @@ class Profile(Resource):
         data = prof_parser.parse_args()
         res = profile_save(data)
         return res
+
+
+
+
+# User wallet manage
+@user_ns.route("/wallet", endpoint="user_wallet")
+class wallet(Resource):
+    """Handles HTTP requests to URL: /api/v1/user/wallet"""
+
+    # Get profile of saved by user
+    @user_ns.doc(security="Bearer")
+    @user_ns.response(int(HTTPStatus.OK), "user wallet")
+        
+
+    def get(self):
+        """wallet saved by user"""
+        return get_wallet()
